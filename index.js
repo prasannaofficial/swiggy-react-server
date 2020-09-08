@@ -1,96 +1,152 @@
-const express = require('express');
+const express = require('express')
 const cors = require('cors')
 
-const myDB=require('./data.json');
+// const myDB=require('./data.json');
+
+const MongoClient = require('mongodb').MongoClient
+let url="";
+if(process.env.URL){
+    url=process.env.URL;
+}
+else{
+    url='mongodb://127.0.0.1:27017';
+}
+const dbName = 'swiggy-replica'
+
+
+//-------Template---------
+// MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+//     if (err) return console.log(err)
+//     db = client.db(dbName)
+//     col=db.collection('------');
+//     col.find({}).toArray(function(err,docs){
+//         let data={};
+//         res.json(data);
+//     });
+// })
+//-------------------------
+
+// const MongoClient = require('mongodb').MongoClient;
+// const uri = "mongodb+srv://prasanna:0Jh8HxkNGefRpK1Z@prasanna.6bywy.gcp.mongodb.net/swiggy-replica?retryWrites=true&w=majority";
+// const client = new MongoClient(uri, { useUnifiedTopology: true });
+// client.connect(err => {
+//     const collection = client.db("swiggy-replica").collection("offers");
+//     console.log(collection.find({}));
+//     client.close();
+// });
 
 const app=express();
 app.use(cors())
 
 app.get('/api/offers',(req,res)=>{
-    let data={ offers:myDB.offers }
-    res.json(data);
+    MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+        if (err) return console.log(err)
+        console.log(url)
+        db = client.db(dbName)
+        col=db.collection('offers');
+        col.find({}).toArray(function(err,docs){
+            let data={
+                offers:docs[0].offers
+            };
+            res.json(data);
+        });
+    })
 });
 
 app.get('/api/restaurants',(req,res)=>{
-    let data={
-        restaurantsList:[]
-    }
-    for(restaurant of myDB.restaurantsList){
-        let {id,imgLink,name,cuisines,avgRating,duration,costForTwoString,shortDiscount,menuCategory,recommended,locality,area,veg}=restaurant;
-        let menu=[]
-        if(menuCategory.length<=7){
-            menu=menuCategory;
-        }
-        else{
-            for(i=0;i<6;i++){
-                menu.push(menuCategory[i]);
+    MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+        if (err) return console.log(err)
+        db = client.db(dbName)
+
+        col=db.collection('restaurants')
+        col.find({}).toArray((err,docs)=>{
+            let data={
+                restaurantsList:[]
             }
-            menu.push(`+${menuCategory.length-6} More`)
-        }
-        let quickView=recommended.map((item,i)=>{
-            if(i<6){
-                let newTemp={
-                    id:item.id,
-                    name:item.name,
-                    imgLink:item.imgLink
+            for(restaurant of docs){
+                let {id,imgLink,name,cuisines,avgRating,duration,costForTwoString,shortDiscount,menuCategory,recommended,locality,area,veg}=restaurant;
+                let menu=[]
+                if(menuCategory.length<=7){
+                    menu=menuCategory;
                 }
-                return newTemp;
+                else{
+                    for(i=0;i<6;i++){
+                        menu.push(menuCategory[i]);
+                    }
+                    menu.push(`+${menuCategory.length-6} More`)
+                }
+                let quickView=recommended.map((item,i)=>{
+                    if(i<6){
+                        let newTemp={
+                            id:item.id,
+                            name:item.name,
+                            imgLink:item.imgLink
+                        }
+                        return newTemp;
+                    }
+                }).filter(item=>{if(item) return item});
+                let temp={
+                    id,
+                    imgLink,
+                    name,
+                    cuisines:cuisines.join(', '),
+                    avgRating,
+                    duration,
+                    costForTwoString,
+                    shortDiscount,
+                    locality,
+                    area,
+                    menuCategory:menu,
+                    quickView,
+                    veg
+                }
+                data.restaurantsList.push(temp)
             }
-        }).filter(item=>{if(item) return item});
-        let temp={
-            id,
-            imgLink,
-            name,
-            cuisines:cuisines.join(', '),
-            avgRating,
-            duration,
-            costForTwoString,
-            shortDiscount,
-            locality,
-            area,
-            menuCategory:menu,
-            quickView,
-            veg
-        }
-        data.restaurantsList.push(temp)
-    }
-    res.json(data);
+            res.json(data);
+        })
+    })
 });
 
 app.get('/api/restaurant/:id',(req,res)=>{
-    let data=myDB.restaurantsList.find( el => el.id===req.params.id)
-    let {id,name,area,city,imgLink,cuisines,locality,avgRating,noOfRating,duration,discount,menuCategory,recommended}=data;
-    let costForTwo=data.others.costForTwo/100;
-    cuisines=cuisines.join(', ');
-    let items=recommended.map(el=>{
-        let temp={
-            id:el.id,
-            name:el.name,
-            imgLink:el.imgLink,
-            price:el.price/100
-        }
-        return temp;
-    }).filter(el => el)
-    let result={
-        id,
-        name,
-        area,
-        city,
-        imgLink,
-        cuisines,
-        locality,
-        avgRating,
-        noOfRating,
-        duration,
-        costForTwo,
-        discount,
-        menuCategory,
-        recommended:items
-    }
-    // console.log(JSON.stringify(data,null,2));
-    res.json(result);
-});
+    MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
+        if (err) return console.log(err)
+        db = client.db(dbName)
+        col=db.collection('restaurants');
+        col.find({"id":req.params.id}).toArray(function(err,docs){
+            docs=docs[0];
+            let {id,name,area,city,imgLink,cuisines,locality,avgRating,noOfRating,duration,discount,menuCategory,recommended}=docs;
+            let costForTwo=docs.others.costForTwo/100;
+            cuisines=cuisines.join(', ');
+            let items=recommended.map(el=>{
+                let temp={
+                    id:el.id,
+                    name:el.name,
+                    imgLink:el.imgLink,
+                    price:el.price/100
+                }
+                return temp;
+            }).filter(el => el)
+            let result={
+                id,
+                name,
+                area,
+                city,
+                imgLink,
+                cuisines,
+                locality,
+                avgRating,
+                noOfRating,
+                duration,
+                costForTwo,
+                discount,
+                menuCategory,
+                recommended:items
+            }
+            res.json(result);
+        });
+    })
+})
 
 app.listen(process.env.PORT || 3000,()=>{
-    console.log(`Process running on port ${process.env.PORT}`)
+    console.log(`Process running on port ${process.env.PORT || 3000}`)
 });
