@@ -91,4 +91,6 @@ app.get('/api/restaurant/:id',(req,res)=>{
     res.json(result);
 });
 
-app.listen(3000);
+app.listen(process.env.PORT || 3000,()=>{
+    console.log(`Process running on port ${process.env.PORT}`)
+});
