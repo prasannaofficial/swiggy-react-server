@@ -41,7 +41,6 @@ app.use(cors())
 app.get('/api/offers',(req,res)=>{
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
         if (err) return console.log(err)
-        console.log(url)
         db = client.db(dbName)
         col=db.collection('offers');
         col.find({}).toArray(function(err,docs){
@@ -57,7 +56,6 @@ app.get('/api/restaurants',(req,res)=>{
     MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
         if (err) return console.log(err)
         db = client.db(dbName)
-
         col=db.collection('restaurants')
         col.find({}).toArray((err,docs)=>{
             let data={
