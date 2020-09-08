@@ -91,4 +91,4 @@ app.get('/api/restaurant/:id',(req,res)=>{
     res.json(result);
 });
 
-app.listen(3001);
+app.listen(3000);
