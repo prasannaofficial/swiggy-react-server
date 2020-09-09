@@ -27,7 +27,7 @@ const dbName = 'swiggy-replica'
 //-------------------------
 
 // const MongoClient = require('mongodb').MongoClient;
-// const uri = "mongodb+srv://prasanna:0Jh8HxkNGefRpK1Z@prasanna.6bywy.gcp.mongodb.net/swiggy-replica?retryWrites=true&w=majority";
+// const uri = "mongodb+srv://<name>:<pwd>@prasanna.6bywy.gcp.mongodb.net/swiggy-replica?retryWrites=true&w=majority";
 // const client = new MongoClient(uri, { useUnifiedTopology: true });
 // client.connect(err => {
 //     const collection = client.db("swiggy-replica").collection("offers");
