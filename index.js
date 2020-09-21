@@ -16,7 +16,7 @@ const url=process.env.URL || 'mongodb://127.0.0.1:27017';
 const dbName = 'swiggy-replica'
 let mongodb;
 MongoClient.connect(url, {  
-        poolSize: 10,
+        poolSize: 30,
         useUnifiedTopology: true
     },function(err, db) {
             mongodb=db;
