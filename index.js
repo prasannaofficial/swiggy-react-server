@@ -1,11 +1,8 @@
 const express = require('express')
-
-
 const cors = require('cors')
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
 const bodyParser = require("body-parser")
-const querystring = require('querystring');
 
 //PROT
 const port = process.env.PORT || 3000;
@@ -48,7 +45,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post('/api/auth/signup',(req,res)=>{
-    // console.log(req.body);
     bcrypt.hash(req.body.password, saltRounds).then(function(hash) {
         col = mongodb.db(dbName).collection('user');
         col.findOne({email:req.body.email},(err,data)=>{
@@ -78,7 +74,6 @@ app.post('/api/auth/login',(req,res)=>{
                     var token = jwt.sign({ id: data._id,name:data.name,email:data.email },secret, {
                         expiresIn: 86400 // 24 hours
                     });
-                    // console.log(token)
                     res.json({"loggedin":true,"message":"user loggedin successfully","token":token})
                 }
                 else{
@@ -109,7 +104,6 @@ app.get('/api/offers',verifyToken,(req,res)=>{
             verifiedUser:true,
             offers:docs[0].offers
         };
-        // res.json(data);
         res.status(200).send(data);
     });
 });
@@ -160,7 +154,6 @@ app.get('/api/restaurants',verifyToken,(req,res)=>{
             }
             data.restaurantsList.push(temp)
         }
-        // res.json(data);
         res.status(200).send(data);
     })
 });
@@ -198,7 +191,6 @@ app.get('/api/restaurant/:id',verifyToken,(req,res)=>{
             menuCategory,
             recommended:items
         }
-        // res.json(result);
         res.status(200).send(result);
     });
 })
@@ -260,25 +252,3 @@ app.get('/api/ordershistory',verifyToken,(req,res)=>{
 app.listen(port,()=>{
     console.log(`Process running on port ${port}`)
 });
-
-
-//-------Template---------
-// MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
-//     if (err) return console.log(err)
-//     db = client.db(dbName)
-//     col=db.collection('------');
-//     col.find({}).toArray(function(err,docs){
-//         let data={};
-//         res.json(data);
-//     });
-// })
-//-------------------------
-
-// const MongoClient = require('mongodb').MongoClient;
-// const uri = "mongodb+srv://<name>:<pwd>@prasanna.6bywy.gcp.mongodb.net/swiggy-replica?retryWrites=true&w=majority";
-// const client = new MongoClient(uri, { useUnifiedTopology: true });
-// client.connect(err => {
-//     const collection = client.db("swiggy-replica").collection("offers");
-//     console.log(collection.find({}));
-//     client.close();
-// });
