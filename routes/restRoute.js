@@ -1,10 +1,10 @@
-const router = require("express").Router();
+const Router = require("express").Router();
 const restController = require("../controllers/restController");
 const verifyToken = require("../middleware/verifyToken");
 
-router.get("/api/isloggedin", verifyToken, restController.isloggedin);
-router.get("/api/restaurants", verifyToken, restController.restaurants);
-router.get("/api/offers", verifyToken, restController.offers);
-router.get("/api/restaurant/:id", verifyToken, restController.restaurant);
+Router.get("/api/isloggedin", verifyToken, restController.isloggedin);
+Router.get("/api/restaurants", verifyToken, restController.restaurants);
+Router.get("/api/offers", verifyToken, restController.offers);
+Router.get("/api/restaurant/:id", verifyToken, restController.restaurant);
 
-module.exports = router;
+module.exports = Router;

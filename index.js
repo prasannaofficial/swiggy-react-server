@@ -1,11 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const { MONGOURI } = require("./config/keys");
+const { MONGOURI, PORT } = require("./config/keys");
 const authRoute = require("./routes/authRoute");
 const restRoute = require("./routes/restRoute");
 const orderRoute = require("./routes/orderRoute");
-
-const port = process.env.PORT || 3000;
 
 const mongoose = require("mongoose");
 mongoose.connect(MONGOURI, {
@@ -27,6 +25,6 @@ app.use("/api/auth", authRoute);
 app.use(restRoute);
 app.use(orderRoute);
 
-app.listen(port, () => {
+app.listen(PORT, () => {
   console.log(`Process running on port ${port}`);
 });
