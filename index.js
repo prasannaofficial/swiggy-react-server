@@ -26,5 +26,5 @@ app.use(restRoute);
 app.use(orderRoute);
 
 app.listen(PORT, () => {
-  console.log(`Process running on port ${port}`);
+  console.log(`Process running on port ${PORT}`);
 });
