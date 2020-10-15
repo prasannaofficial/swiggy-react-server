@@ -1,4 +1,5 @@
 const Orders = require("../models/ordersSchema");
+// const User = require("../models/userSchema");
 
 const placeorder = (req, res) => {
   let newOrder = new Orders({
@@ -15,51 +16,92 @@ const placeorder = (req, res) => {
     }
   });
 };
+
+const sendOrdersResponse = (offset, limit, res, orders) => {
+  let result = orders.slice(offset, Number(offset) + Number(limit));
+  res.json({
+    arr: result,
+    verifiedUser: true,
+    length: orders.length,
+  });
+};
+
 const ordershistory = (req, res) => {
   let { q, limit, offset, sort } = req.query;
+  let sortObject = {};
   if (!q) {
+    // let condition;
+    // if (req.role === "admin") {
+    //   condition = {};
+    // } else {
+    //   condition = {
+    //     userid: req.userId,
+    //   };
+    // }
     switch (sort) {
       case "new":
-        Orders.find({ userid: req.userId })
-          .sort({ date: -1 })
-          .then((docs) => {
-            let result = docs.slice(offset, offset + limit);
-            res.json({ arr: result, verifiedUser: true, length: docs.length });
-          });
+        sortObject.date = -1;
         break;
       case "old":
-        Orders.find({ userid: req.userId })
-          .sort({ date: 1 })
-          .then((docs) => {
-            let result = docs.slice(offset, offset + limit);
-            res.json({ arr: result, verifiedUser: true, length: docs.length });
-          });
-        break;
+        sortObject.date = 1;
       case "asce":
-        Orders.find({ userid: req.userId })
-          .sort({ restname: 1 })
-          .then((docs) => {
-            let result = docs.slice(offset, offset + limit);
-            res.json({ arr: result, verifiedUser: true, length: docs.length });
-          });
+        sortObject.restname = 1;
         break;
       case "desc":
-        Orders.find({ userid: req.userId })
-          .sort({ restname: -1 })
-          .then((docs) => {
-            let result = docs.slice(offset, offset + limit);
-            res.json({ arr: result, verifiedUser: true, length: docs.length });
-          });
+        sortObject.restname = -1;
         break;
     }
+  }
+  // else {
+  //   Orders.find({
+  //     ...condition,
+  //     restname: { $regex: new RegExp(".*" + q + ".*", "i") },
+  //   }).then((docs) => {
+  //     let result = docs.slice(offset, Number(offset) + Number(limit));
+  //     res.json({ arr: result, verifiedUser: true, length: docs.length });
+  //   });
+  // }
+  if (req.role === "admin") {
+    let aggregateArray = [];
+    if (!q)
+      aggregateArray.push({
+        $sort: {
+          ...sortObject,
+        },
+      });
+    else
+      aggregateArray.push({
+        $match: {
+          restname: new RegExp(".*" + q + ".*", "i"),
+        },
+      });
+    Orders.aggregate([
+      ...aggregateArray,
+      {
+        $lookup: {
+          from: "user",
+          localField: "userid",
+          foreignField: "_id",
+          as: "userdetails",
+        },
+      },
+    ]).exec((err, newOrders) =>
+      sendOrdersResponse(offset, limit, res, newOrders)
+    );
   } else {
-    Orders.find({
-      userid: req.userId,
-      restname: { $regex: new RegExp(".*" + q + ".*", "i") },
-    }).then((docs) => {
-      let result = docs.slice(offset, offset + limit);
-      res.json({ arr: result, verifiedUser: true, length: docs.length });
-    });
+    if (!q)
+      Orders.find({ userid: req.userId })
+        .sort(sortObject)
+        .then((docs) => {
+          sendOrdersResponse(offset, limit, res, docs);
+        });
+    else
+      Orders.find({
+        userid: req.userId,
+        restname: { $regex: new RegExp(".*" + q + ".*", "i") },
+      }).then((docs) => {
+        sendOrdersResponse(offset, limit, res, docs);
+      });
   }
 };
 

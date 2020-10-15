@@ -4,6 +4,7 @@ const { MONGOURI, PORT } = require("./config/keys");
 const authRoute = require("./routes/authRoute");
 const restRoute = require("./routes/restRoute");
 const orderRoute = require("./routes/orderRoute");
+const adminRoute = require("./routes/adminRoute");
 
 const mongoose = require("mongoose");
 mongoose.connect(MONGOURI, {
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api/auth", authRoute);
 app.use(restRoute);
 app.use(orderRoute);
+app.use("/api/admin", adminRoute);
 
 app.listen(PORT, () => {
   console.log(`Process running on port ${PORT}`);

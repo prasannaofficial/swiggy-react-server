@@ -22,7 +22,12 @@ const signup = (req, res) => {
         newUser.save(function (err, data) {
           if (!err) {
             var token = jwt.sign(
-              { id: data._id, name: data.name, email: data.email },
+              {
+                id: data._id,
+                name: data.name,
+                email: data.email,
+                role: "user",
+              },
               JWT_SECRET,
               {
                 expiresIn: 86400, // 24 hours
@@ -32,6 +37,7 @@ const signup = (req, res) => {
               userInserted: true,
               message: "Account created successfully",
               token: token,
+              role: "user",
             });
           }
         });
@@ -45,7 +51,12 @@ const login = (req, res) => {
       bcrypt.compare(req.body.password, data.password).then(function (result) {
         if (result) {
           var token = jwt.sign(
-            { id: data._id, name: data.name, email: data.email },
+            {
+              id: data._id,
+              name: data.name,
+              email: data.email,
+              role: data.role,
+            },
             JWT_SECRET,
             {
               expiresIn: 86400, // 24 hours
@@ -55,6 +66,7 @@ const login = (req, res) => {
             loggedin: true,
             message: "user loggedin successfully",
             token: token,
+            role: data.role,
           });
         } else {
           res.json({

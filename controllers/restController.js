@@ -4,6 +4,7 @@ const Offers = require("../models/offersSchema");
 const isloggedin = (req, res) => {
   let data = {
     verifiedUser: true,
+    role: req.role,
   };
   res.status(200).send(data);
 };

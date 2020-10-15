@@ -17,6 +17,7 @@ module.exports = (req, res, next) => {
     req.userId = decoded.id;
     req.userName = decoded.name;
     req.userEmail = decoded.email;
+    req.role = decoded.role;
     next();
   });
 };
