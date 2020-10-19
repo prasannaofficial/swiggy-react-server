@@ -4,6 +4,7 @@ const Orders = require("../models/ordersSchema");
 const placeorder = (req, res) => {
   let newOrder = new Orders({
     userid: req.userId,
+    is_success: true,
     restname: req.body.restname,
     restarea: req.body.area,
     restimg: req.body.imglink,
@@ -63,16 +64,22 @@ const ordershistory = (req, res) => {
   // }
   if (req.role === "admin") {
     let aggregateArray = [];
-    if (!q)
+    if (!q) {
       aggregateArray.push({
         $sort: {
           ...sortObject,
         },
       });
-    else
+      aggregateArray.push({
+        $match: {
+          is_success: true,
+        },
+      });
+    } else
       aggregateArray.push({
         $match: {
           restname: new RegExp(".*" + q + ".*", "i"),
+          is_success: true,
         },
       });
     Orders.aggregate([
@@ -90,7 +97,7 @@ const ordershistory = (req, res) => {
     );
   } else {
     if (!q)
-      Orders.find({ userid: req.userId })
+      Orders.find({ userid: req.userId, is_success: true })
         .sort(sortObject)
         .then((docs) => {
           sendOrdersResponse(offset, limit, res, docs);
@@ -98,6 +105,7 @@ const ordershistory = (req, res) => {
     else
       Orders.find({
         userid: req.userId,
+        is_success: true,
         restname: { $regex: new RegExp(".*" + q + ".*", "i") },
       }).then((docs) => {
         sendOrdersResponse(offset, limit, res, docs);

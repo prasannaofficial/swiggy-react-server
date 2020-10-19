@@ -1,6 +1,7 @@
 const Razorpay = require("razorpay");
 const uid = require("uid");
 const axios = require("axios");
+const Orders = require("../models/ordersSchema");
 const { RAZORPAY_API_KEY, RAZORPAY_API_SECRET } = require("../config/keys");
 const instance = new Razorpay({
   key_id: RAZORPAY_API_KEY,
@@ -9,10 +10,8 @@ const instance = new Razorpay({
 
 exports.order = (req, res) => {
   try {
-    // console.log(req.body);
     const options = {
       amount: req.body.totalprice * 100,
-      // amount: 100,
       currency: "INR",
       receipt: "receipt#" + uid(16),
       payment_capture: 0,
@@ -23,8 +22,24 @@ exports.order = (req, res) => {
           message: "Something Went Wrong",
         });
       }
-      // console.log("success", order);
-      return res.status(200).json(order);
+      let newOrder = new Orders({
+        userid: req.userId,
+        restname: req.body.restname,
+        restarea: req.body.area,
+        restimg: req.body.imglink,
+        orders: JSON.parse(req.body.ordersjson),
+        totalprice: req.body.totalprice,
+      });
+      newOrder.save((err, data) => {
+        if (!err) {
+          return res.status(200).json({
+            ...order,
+            orderplaced: true,
+            message: "Order Placed Successfully!!",
+            data,
+          });
+        }
+      });
     });
   } catch (err) {
     return res.status(500).json({
@@ -42,47 +57,25 @@ exports.capture = (req, res) => {
       .post(url, data)
       .then((response) => {
         const data = response.data;
-        console.log(response.data);
         const { status, order_id } = data;
-        return res.status(200).json({ status: status, order_id: order_id });
+        Orders.find({ _id: req.body.swiggy_order_id }, (err, doc) => {
+          Object.assign(doc[0], { is_success: true });
+          doc[0].save((err) => {
+            if (!err) {
+              return res
+                .status(200)
+                .json({ status: status, order_id: order_id });
+            }
+          });
+        });
       })
       .catch((err) => {
-        console.log("try catch");
         console.log(err);
       });
   } catch (err) {
     console.log("catch");
-    console.log(err);
     return res.status(500).json({
       message: "Something Went Wrong out capture",
     });
   }
-  // try {
-  //   return request(
-  //     {
-  //       method: "POST",
-  //       url: `https://${RAZORPAY_API_KEY}:${RAZORPAY_API_SECRET}@api.razorpay.com/v1/payments/${req.body.paymentId}/capture`,
-  //       form: {
-  //         amount: req.body.totalprice * 100,
-  //         currency: "INR",
-  //       },
-  //     },
-  //     async function (err, response, body) {
-  //       if (err) {
-  //         console.log("try", err);
-  //         return res.status(500).json({
-  //           message: "Something Went Wrong",
-  //           err: err,
-  //         });
-  //       }
-  //       return res.status(200).json(body);
-  //     }
-  //   );
-  // } catch (err) {
-  //   console.log("catch", err);
-  //   return res.status(500).json({
-  //     message: "Something Went Wrong",
-  //     err: err,
-  //   });
-  // }
 };

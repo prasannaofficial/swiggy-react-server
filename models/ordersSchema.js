@@ -7,6 +7,10 @@ const ordersSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  is_success: {
+    type: Boolean,
+    default: false,
+  },
   restname: String,
   restarea: String,
   restimg: String,
