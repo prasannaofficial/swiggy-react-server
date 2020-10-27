@@ -4,3 +4,4 @@ npm-debug.log
 /*.env
 index_old.js
 config/dev.js
+controllers/adminController old.js
