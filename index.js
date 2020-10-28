@@ -11,6 +11,8 @@ const orderRoute = require("./routes/orderRoute");
 const paymentRoute = require("./routes/paymentRoute");
 const adminRoute = require("./routes/adminRoute");
 
+const Chat = require("./models/chatSchema");
+
 const mongoose = require("mongoose");
 mongoose.connect(MONGOURI, {
   useNewUrlParser: true,
@@ -50,15 +52,28 @@ io.use((socket, next) => {
   }
 }).on("connection", (socket) => {
   let roomId;
-  console.log(socket.handshake.query.to);
+  // console.log(socket.handshake.query.to);
   if (socket.handshake.query.to) {
     roomId = socket.handshake.query.to;
   } else {
     roomId = socket.decoded.email;
   }
+  socket.on("receive messages", () => {
+    Chat.find({ email: roomId }).then((data) => {
+      socket.emit("initial messages", data);
+    });
+  });
+
   socket.join(roomId);
   socket.on("send message", (message) => {
-    console.log(message, socket.decoded.email);
+    // console.log(message, socket.decoded.email);
+    let newChat = new Chat({
+      userid: socket.decoded.id,
+      message: message,
+      role: socket.decoded.role,
+      email: roomId,
+    });
+    newChat.save();
     io.in(roomId).emit("message", {
       message,
       role: socket.decoded.role,
