@@ -5,3 +5,4 @@ npm-debug.log
 index_old.js
 config/dev.js
 controllers/adminController old.js
+controllers/message.js

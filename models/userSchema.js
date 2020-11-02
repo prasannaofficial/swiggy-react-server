@@ -4,6 +4,7 @@ const userSchema = new Schema({
   name: String,
   email: String,
   password: String,
+  fcmtoken: String,
   role: {
     type: String,
     enum: ["user", "admin"],

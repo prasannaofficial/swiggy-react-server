@@ -10,8 +10,11 @@ const restRoute = require("./routes/restRoute");
 const orderRoute = require("./routes/orderRoute");
 const paymentRoute = require("./routes/paymentRoute");
 const adminRoute = require("./routes/adminRoute");
+const fcmRoute = require("./routes/fcmRoute");
 
+const User = require("./models/userSchema");
 const Chat = require("./models/chatSchema");
+const { sendNotificationToClient } = require("./notify");
 
 const mongoose = require("mongoose");
 mongoose.connect(MONGOURI, {
@@ -36,6 +39,7 @@ app.use(restRoute);
 app.use(orderRoute);
 app.use("/api/payment", paymentRoute);
 app.use("/api/admin", adminRoute);
+app.use("/fcm", fcmRoute);
 
 io.use((socket, next) => {
   if (socket.handshake.query && socket.handshake.query.token) {
@@ -58,6 +62,11 @@ io.use((socket, next) => {
   } else {
     roomId = socket.decoded.email;
   }
+  if (socket.decoded.role === "admin") {
+    User.findOne({ email: roomId }, (err, doc) => {
+      socket.decoded.fcmtoken = doc.fcmtoken;
+    });
+  }
   socket.on("receive messages", () => {
     Chat.find({ email: roomId }).then((data) => {
       socket.emit("initial messages", data);
@@ -74,6 +83,14 @@ io.use((socket, next) => {
       email: roomId,
     });
     newChat.save();
+    if (socket.decoded.role === "admin") {
+      const notificationData = {
+        title: "Swiggy",
+        body: message,
+      };
+      const tokens = [socket.decoded.fcmtoken];
+      sendNotificationToClient(tokens, notificationData);
+    }
     io.in(roomId).emit("message", {
       message,
       role: socket.decoded.role,
